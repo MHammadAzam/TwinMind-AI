@@ -17,7 +17,5 @@ def get_current_telemetry() -> TelemetryReading:
 
 @router.get("/history", response_model=list[TelemetryReading])
 def get_telemetry_history(limit: int = Query(default=10, ge=1, le=100)) -> list[TelemetryReading]:
-    if not simulator.get_history(limit=1):
-        simulator.generate_reading()
     history = simulator.get_history(limit=limit)
     return [TelemetryReading(**entry) for entry in history]

@@ -5,7 +5,7 @@ from app.simulator.engine import TelemetrySimulator
 
 class TelemetrySimulatorTests(unittest.TestCase):
     def test_generate_reading_returns_expected_fields(self) -> None:
-        simulator = TelemetrySimulator()
+        simulator = TelemetrySimulator(auto_generate=False)
 
         reading = simulator.generate_reading()
 
@@ -21,14 +21,25 @@ class TelemetrySimulatorTests(unittest.TestCase):
         self.assertIn("health_status", reading)
 
     def test_history_tracks_multiple_readings(self) -> None:
-        simulator = TelemetrySimulator()
+        simulator = TelemetrySimulator(auto_generate=False)
 
         simulator.generate_reading()
         simulator.generate_reading()
 
         history = simulator.get_history(limit=5)
 
-        self.assertGreaterEqual(len(history), 2)
+        self.assertEqual(len(history), 2)
+        self.assertGreaterEqual(history[-1]["temperature"], history[0]["temperature"])
+
+    def test_history_limit_returns_latest_records(self) -> None:
+        simulator = TelemetrySimulator(auto_generate=False, max_history=20)
+
+        for _ in range(25):
+            simulator.generate_reading()
+
+        history = simulator.get_history(limit=10)
+
+        self.assertEqual(len(history), 10)
         self.assertEqual(history[0]["timestamp"], history[0]["timestamp"])
 
 
