@@ -4,7 +4,7 @@ from app.schemas.telemetry import TelemetryReading
 from app.simulator.engine import TelemetrySimulator
 
 router = APIRouter(prefix="/telemetry", tags=["telemetry"])
-simulator = TelemetrySimulator()
+simulator = TelemetrySimulator(interval_seconds=1.0, auto_generate=True)
 
 
 @router.get("/current", response_model=TelemetryReading)

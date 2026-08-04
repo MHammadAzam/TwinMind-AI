@@ -8,7 +8,7 @@ from typing import Any
 
 
 class TelemetrySimulator:
-    def __init__(self, interval_seconds: float = 2.0, max_history: int = 500, auto_generate: bool = True) -> None:
+    def __init__(self, interval_seconds: float = 1.0, max_history: int = 500, auto_generate: bool = True) -> None:
         self._history: list[dict[str, Any]] = []
         self._mode = "normal"
         self._load = 0.6
@@ -89,14 +89,14 @@ class TelemetrySimulator:
             target_power_output -= 60
             self._failure_counter = 0
 
-        temperature = self._smooth_value(self._last_temperature, target_temperature, 0.2)
-        pressure = self._smooth_value(self._last_pressure, target_pressure, 0.2)
-        rpm = self._smooth_value(self._last_rpm, target_rpm, 0.2)
-        vibration = self._smooth_value(self._last_vibration, target_vibration, 0.18)
-        fuel_flow = self._smooth_value(self._last_fuel_flow, target_fuel_flow, 0.2)
-        exhaust_temperature = self._smooth_value(self._last_exhaust_temperature, target_exhaust_temperature, 0.2)
-        power_output = self._smooth_value(self._last_power_output, target_power_output, 0.2)
-        efficiency = self._smooth_value(self._last_efficiency, target_efficiency, 0.18)
+        temperature = self._smooth_value(self._last_temperature, target_temperature, 0.5)
+        pressure = self._smooth_value(self._last_pressure, target_pressure, 0.5)
+        rpm = self._smooth_value(self._last_rpm, target_rpm, 0.5)
+        vibration = self._smooth_value(self._last_vibration, target_vibration, 0.4)
+        fuel_flow = self._smooth_value(self._last_fuel_flow, target_fuel_flow, 0.5)
+        exhaust_temperature = self._smooth_value(self._last_exhaust_temperature, target_exhaust_temperature, 0.5)
+        power_output = self._smooth_value(self._last_power_output, target_power_output, 0.5)
+        efficiency = self._smooth_value(self._last_efficiency, target_efficiency, 0.4)
 
         health_status = "healthy"
         if self._mode == "warning":
