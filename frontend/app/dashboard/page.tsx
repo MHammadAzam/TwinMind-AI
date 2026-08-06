@@ -11,6 +11,8 @@ import { useCurrentTelemetry } from '@/hooks/useCurrentTelemetry';
 export default function DashboardPage() {
   const { data, isLoading, error } = useCurrentTelemetry();
 
+  console.log('Dashboard telemetry update', data);
+
   if (isLoading) {
     return (
       <main className="min-h-screen bg-slate-950 p-6 text-slate-300">
@@ -49,7 +51,7 @@ export default function DashboardPage() {
               <Activity size={16} />
               Live metric envelope
             </div>
-            <MetricGrid />
+            <MetricGrid telemetry={data} />
           </div>
           <HealthStatusCard reading={data} />
         </section>
