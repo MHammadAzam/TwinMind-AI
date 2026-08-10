@@ -6,7 +6,9 @@ export async function apiClient<T>(
   const response = await fetch(`${BASE_URL}${endpoint}`, {
     cache: 'no-store',
     headers: {
-      'Cache-Control': 'no-store',
+      'Cache-Control': 'no-cache, no-store, max-age=0',
+      Pragma: 'no-cache',
+      Expires: '0',
     },
   });
 

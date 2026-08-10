@@ -6,8 +6,14 @@ import { getCurrentTelemetry } from "@/lib/api/telemetry";
 export function useCurrentTelemetry() {
   return useQuery({
     queryKey: ["currentTelemetry"],
-    queryFn: getCurrentTelemetry,
+    queryFn: async () => {
+      const telemetry = await getCurrentTelemetry();
+      console.log("Current telemetry refetched", telemetry);
+      return telemetry;
+    },
     refetchInterval: 3000,
+    refetchIntervalInBackground: true,
     refetchOnWindowFocus: true,
+    staleTime: 0,
   });
 }
