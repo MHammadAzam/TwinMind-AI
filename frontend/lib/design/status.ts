@@ -34,9 +34,10 @@ export function getOverallStatus(telemetry: TelemetryReading | Record<string, nu
 
   for (const key in thresholds) {
     const metric = key as keyof typeof thresholds;
-    const value = telemetry[metric];
+    const rawValue = telemetry[metric];
+    const value = typeof rawValue === 'number' ? rawValue : Number(rawValue);
 
-    if (typeof value !== 'number') {
+    if (!Number.isFinite(value)) {
       continue;
     }
 
