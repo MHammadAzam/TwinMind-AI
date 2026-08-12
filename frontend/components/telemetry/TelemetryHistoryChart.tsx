@@ -1,89 +1,141 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import MetricSelector from './MetricSelector';
-import TimeRangeSelector from './TimeRangeSelector';
-import { useTelemetryHistory } from '@/hooks/useTelemetryHistory';
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import { metrics } from '@/config/metrics';
-import { getMetricStatus, getStatusStyles } from '@/lib/design/status';
-import { formatTimestamp } from '@/lib/utils/time';
-import type { TelemetryMetricKey } from '@/types/telemetry';
+import { thresholds } from '@/lib/design/thresholds';
+import { formatMetricValue } from '@/lib/utils/formatters';
+import { formatTimestamp, formatTimestampWithSeconds } from '@/lib/utils/time';
+import type { TelemetryMetricKey, TelemetryReading } from '@/types/telemetry';
 
-const timeRangeOptions = [
-  { label: '1H', value: '1h' },
-  { label: '6H', value: '6h' },
-  { label: '24H', value: '24h' },
-] as const;
+interface TelemetryHistoryChartProps {
+  data: TelemetryReading[];
+  metricKey: TelemetryMetricKey;
+  rangeLabel: string;
+}
 
-export default function TelemetryHistoryChart() {
-  const [selectedMetric, setSelectedMetric] = useState<TelemetryMetricKey>('temperature');
-  const [timeRange, setTimeRange] = useState<(typeof timeRangeOptions)[number]['value']>('6h');
-  const { data, isLoading, error } = useTelemetryHistory();
+interface ChartPoint {
+  timestamp: string;
+  timeLabel: string;
+  value: number;
+}
 
-  const visibleData = useMemo(() => {
-    if (!data?.length) {
-      return [];
-    }
+interface TelemetryTooltipProps {
+  active?: boolean;
+  payload?: Array<{ payload: ChartPoint }>;
+  metricKey: TelemetryMetricKey;
+}
 
-    const ordered = [...data].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-    const limit = timeRange === '1h' ? 12 : timeRange === '6h' ? 24 : 48;
+function getMetricConfig(metricKey: TelemetryMetricKey) {
+  return metrics.find((metric) => metric.key === metricKey) ?? metrics[0];
+}
 
-    return ordered.slice(-limit).map((entry) => ({
-      ...entry,
-      label: formatTimestamp(entry.timestamp),
-      value: entry[selectedMetric],
-    }));
-  }, [data, selectedMetric, timeRange]);
-
-  const latestValue = visibleData.at(-1)?.value ?? 0;
-  const status = getMetricStatus(selectedMetric, latestValue);
-  const styles = getStatusStyles(status);
-
-  if (isLoading) {
-    return <div className="rounded border border-slate-800 bg-slate-950/70 p-6 text-sm text-slate-400">Loading history…</div>;
+function TelemetryTooltip({
+  active,
+  payload,
+  metricKey,
+}: TelemetryTooltipProps) {
+  if (!active || !payload?.length) {
+    return null;
   }
 
-  if (error || !data?.length) {
-    return <div className="rounded border border-red-500/30 bg-red-500/10 p-6 text-sm text-red-400">History data is unavailable.</div>;
-  }
+  const point = payload[0].payload as ChartPoint;
+  const metric = getMetricConfig(metricKey);
 
   return (
-    <section className="rounded border border-slate-800 bg-slate-950/70 p-5">
-      <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Trends</p>
-          <h2 className="mt-1 text-lg font-semibold text-slate-100">Telemetry history</h2>
-        </div>
-        <div className="flex flex-col gap-3 md:flex-row md:items-center">
-          <MetricSelector selectedMetric={selectedMetric} onSelect={setSelectedMetric} />
-          <TimeRangeSelector
-            options={timeRangeOptions}
-            selectedValue={timeRange}
-            onSelect={(value) => setTimeRange(value)}
-          />
-        </div>
-      </div>
+    <div className="rounded border border-slate-700 bg-slate-950 px-4 py-3 text-sm shadow-xl">
+      <p className="font-mono text-xs uppercase tracking-[0.2em] text-slate-500">
+        Time: {formatTimestampWithSeconds(point.timestamp)}
+      </p>
+      <p className="mt-2 text-slate-200">
+        <span className="text-slate-400">{metric.label}: </span>
+        <span className="font-mono text-slate-100">
+          {formatMetricValue(point.value, metric.precision)} {metric.unit}
+        </span>
+      </p>
+    </div>
+  );
+}
 
-      <div className="mb-4 flex items-center justify-between rounded border border-slate-800 bg-slate-900/70 px-4 py-3 text-sm text-slate-400">
-        <span>Selected metric: {metrics.find((metric) => metric.key === selectedMetric)?.label}</span>
-        <span className={`font-mono uppercase ${styles.text}`}>{status}</span>
-      </div>
+export default function TelemetryHistoryChart({ data, metricKey, rangeLabel }: TelemetryHistoryChartProps) {
+  const metric = getMetricConfig(metricKey);
+  const metricThresholds = thresholds[metricKey];
+  const chartData = [...data]
+    .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+    .map((entry) => {
+      const rawValue = entry[metricKey];
+      const value = typeof rawValue === 'number' ? rawValue : Number(rawValue);
 
-      <div className="h-80">
+      return {
+        timestamp: entry.timestamp,
+        timeLabel: formatTimestamp(entry.timestamp),
+        value: Number.isFinite(value) ? value : 0,
+      };
+    });
+
+  return (
+    <div>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-xs uppercase tracking-[0.22em] text-slate-500">
+        <span>
+          {metric.label} ({metric.unit})
+        </span>
+        <span>{rangeLabel}</span>
+      </div>
+      <div className="h-72">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={visibleData}>
-            <CartesianGrid stroke="#1f2937" strokeDasharray="3 3" />
-            <XAxis dataKey="label" tick={{ fill: '#94a3b8', fontSize: 12 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: '#94a3b8', fontSize: 12 }} axisLine={false} tickLine={false} />
-            <Tooltip
-              contentStyle={{ backgroundColor: '#020617', border: '1px solid #334155', borderRadius: '0.5rem' }}
-              labelStyle={{ color: '#f8fafc' }}
+          <LineChart data={chartData} margin={{ top: 16, right: 18, bottom: 8, left: 0 }}>
+            <CartesianGrid stroke="#1f2937" strokeDasharray="3 3" vertical={false} />
+            <XAxis
+              dataKey="timeLabel"
+              tick={{ fill: '#94a3b8', fontSize: 12 }}
+              axisLine={{ stroke: '#334155' }}
+              tickLine={false}
+              minTickGap={24}
             />
-            <Line type="monotone" dataKey="value" stroke={styles.chart} strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
+            <YAxis
+              tick={{ fill: '#94a3b8', fontSize: 12 }}
+              axisLine={{ stroke: '#334155' }}
+              tickLine={false}
+              tickFormatter={(value) => formatMetricValue(Number(value), metric.precision)}
+              width={72}
+            />
+            <Tooltip content={<TelemetryTooltip metricKey={metricKey} />} cursor={{ stroke: '#475569', strokeWidth: 1 }} />
+            <ReferenceLine
+              y={metricThresholds.warning}
+              ifOverflow="extendDomain"
+              stroke="#f59e0b"
+              strokeDasharray="6 6"
+              strokeOpacity={0.55}
+              label={{ value: 'Warning', fill: '#f59e0b', fontSize: 11, position: 'insideTopRight' }}
+            />
+            <ReferenceLine
+              y={metricThresholds.critical}
+              ifOverflow="extendDomain"
+              stroke="#ef4444"
+              strokeDasharray="6 6"
+              strokeOpacity={0.6}
+              label={{ value: 'Critical', fill: '#ef4444', fontSize: 11, position: 'insideTopRight' }}
+            />
+            <Line
+              type="monotone"
+              dataKey="value"
+              stroke="#38bdf8"
+              strokeWidth={2.4}
+              dot={false}
+              activeDot={{ r: 4, fill: '#e0f2fe', stroke: '#0284c7', strokeWidth: 2 }}
+              isAnimationActive={false}
+            />
           </LineChart>
         </ResponsiveContainer>
       </div>
-    </section>
+    </div>
   );
 }

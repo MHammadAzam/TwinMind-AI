@@ -21,3 +21,5 @@ export type TelemetryMetricKey =
   | 'exhaust_temperature'
   | 'power_output'
   | 'efficiency';
+
+export type TelemetryHistoryRange = '25' | '50' | '100';

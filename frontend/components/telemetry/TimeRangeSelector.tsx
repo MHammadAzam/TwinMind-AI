@@ -1,7 +1,9 @@
+import type { TelemetryHistoryRange } from '@/types/telemetry';
+
 interface TimeRangeSelectorProps {
-  options: ReadonlyArray<{ label: string; value: string }>;
-  selectedValue: string;
-  onSelect: (value: '1h' | '6h' | '24h') => void;
+  options: ReadonlyArray<{ label: string; value: TelemetryHistoryRange }>;
+  selectedValue: TelemetryHistoryRange;
+  onSelect: (value: TelemetryHistoryRange) => void;
 }
 
 export default function TimeRangeSelector({ options, selectedValue, onSelect }: TimeRangeSelectorProps) {
@@ -10,7 +12,7 @@ export default function TimeRangeSelector({ options, selectedValue, onSelect }: 
       <span className="uppercase tracking-[0.25em] text-slate-500">Range</span>
       <select
         value={selectedValue}
-        onChange={(event) => onSelect(event.target.value as '1h' | '6h' | '24h')}
+        onChange={(event) => onSelect(event.target.value as TelemetryHistoryRange)}
         className="rounded border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none"
       >
         {options.map((option) => (
