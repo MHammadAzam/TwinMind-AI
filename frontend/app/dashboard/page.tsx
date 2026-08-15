@@ -12,13 +12,8 @@ import TimeRangeSelector from '@/components/telemetry/TimeRangeSelector';
 import { metrics } from '@/config/metrics';
 import { useCurrentTelemetry } from '@/hooks/useCurrentTelemetry';
 import { useTelemetryHistory } from '@/hooks/useTelemetryHistory';
+import { historyRangeOptions } from '@/lib/api/telemetry';
 import type { TelemetryHistoryRange, TelemetryMetricKey } from '@/types/telemetry';
-
-const historyRangeOptions: ReadonlyArray<{ label: string; value: TelemetryHistoryRange }> = [
-  { label: 'Last 25', value: '25' },
-  { label: 'Last 50', value: '50' },
-  { label: 'Last 100', value: '100' },
-];
 
 export default function DashboardPage() {
   const { data, isLoading, error } = useCurrentTelemetry();

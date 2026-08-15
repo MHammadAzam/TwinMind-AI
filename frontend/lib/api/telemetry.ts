@@ -1,5 +1,17 @@
 import { apiClient } from "./client";
-import type { TelemetryHistoryRange, TelemetryReading } from "@/types/telemetry";
+import type { TelemetryHistoryOption, TelemetryHistoryRange, TelemetryReading } from "@/types/telemetry";
+
+export const historyRangeOptions: ReadonlyArray<TelemetryHistoryOption> = [
+  { label: 'Last 25', value: '25' },
+  { label: 'Last 50', value: '50' },
+  { label: 'Last 100', value: '100' },
+];
+
+export const historyRangeToLimit: Record<TelemetryHistoryRange, number> = {
+  '25': 25,
+  '50': 50,
+  '100': 100,
+};
 
 export function getCurrentTelemetry() {
   const cacheBuster = Date.now();
@@ -8,12 +20,6 @@ export function getCurrentTelemetry() {
     `/api/v1/telemetry/current?_=${cacheBuster}`
   );
 }
-
-const historyRangeToLimit: Record<TelemetryHistoryRange, number> = {
-  '25': 25,
-  '50': 50,
-  '100': 100,
-};
 
 export function getTelemetryHistory(range: TelemetryHistoryRange) {
   const limit = historyRangeToLimit[range];

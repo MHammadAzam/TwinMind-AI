@@ -23,3 +23,8 @@ export type TelemetryMetricKey =
   | 'efficiency';
 
 export type TelemetryHistoryRange = '25' | '50' | '100';
+
+export interface TelemetryHistoryOption {
+  label: string;
+  value: TelemetryHistoryRange;
+}

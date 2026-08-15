@@ -6,7 +6,9 @@ export function useTelemetryHistory(metric: TelemetryMetricKey, range: Telemetry
   return useQuery({
     queryKey: ['telemetry-history', metric, range],
     queryFn: () => getTelemetryHistory(range),
-    refetchInterval: 15000,
+    staleTime: 15_000,
+    gcTime: 5 * 60_000,
+    refetchInterval: 15_000,
     refetchIntervalInBackground: true,
   });
 }

@@ -9,9 +9,7 @@ simulator = TelemetrySimulator(interval_seconds=1.0, auto_generate=True)
 
 @router.get("/current", response_model=TelemetryReading)
 def get_current_telemetry() -> TelemetryReading:
-    reading = simulator.get_current()
-    if reading is None:
-        reading = simulator.generate_reading()
+    reading = simulator.generate_reading()
     return TelemetryReading(**reading)
 
 
